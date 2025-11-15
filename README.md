@@ -6,10 +6,6 @@
 ```md
 > 👻 Pixel Phantoms — From Students, For Students**  
 
-[![Open Source Love](https://img.shields.io/badge/Contributions-Welcome-brightgreen)](https://github.com/your-username/pixel-phantoms-website)  
-[![GitHub issues](https://img.shields.io/github/issues/your-username/pixel-phantoms-website)](https://github.com/your-username/pixel-phantoms-website/issues)  
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
 ---
 
 ## 🌟 Project Overview
