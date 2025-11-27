@@ -1,9 +1,7 @@
-// js/home-leaderboard.js
-
 const REPO_OWNER = 'sayeeg-11';
 const REPO_NAME = 'Pixel_Phantoms';
 const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
-const XP_MULTIPLIER = 100; // 1 Point = 100 XP
+const XP_MULTIPLIER = 100;
 
 // Scoring System
 const POINTS = {
@@ -13,12 +11,12 @@ const POINTS = {
     DEFAULT: 1
 };
 
-// League Perks Definition
+// League Definitions for Logic
 const LEAGUES = {
-    GOLD: { threshold: 15000, name: 'Gold', perk: '🏆 Access to Core Team', color: '#FFD700' },
-    SILVER: { threshold: 7500, name: 'Silver', perk: '👕 Exclusive Merch', color: '#C0C0C0' },
-    BRONZE: { threshold: 3000, name: 'Bronze', perk: '👾 Discord VIP Badge', color: '#CD7F32' },
-    ROOKIE: { threshold: 0, name: 'Rookie', perk: '🌱 Contributor Role', color: '#00aaff' }
+    GOLD: { threshold: 15000, name: 'Gold Class', color: '#FFD700' },
+    SILVER: { threshold: 7500, name: 'Silver Class', color: '#C0C0C0' },
+    BRONZE: { threshold: 3000, name: 'Bronze Class', color: '#CD7F32' },
+    ROOKIE: { threshold: 0, name: 'Rookie Agent', color: '#00aaff' }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,20 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initLeaderboard() {
+    const container = document.getElementById('lb-rows');
     try {
         const pulls = await fetchAllPulls();
         const scores = calculateScores(pulls);
         const topContributors = getTopContributors(scores);
-        updateLeaderboardUI(topContributors);
+        
+        renderLeaderboard(topContributors);
     } catch (error) {
         console.error("Leaderboard Sync Failed:", error);
+        if(container) container.innerHTML = `<div style="padding:20px; text-align:center; color:#ff5f56;">Connection Lost. Retrying uplink...</div>`;
     }
 }
 
-// Fetch recent PR history (limit 3 pages for performance)
+// Fetch up to 300 recent PRs
 async function fetchAllPulls() {
     let pulls = [];
     let page = 1;
+    // Limit to 3 pages to avoid rate limits on public IP
     while (page <= 3) {
         try {
             const res = await fetch(`${API_BASE}/pulls?state=all&per_page=100&page=${page}`);
@@ -60,7 +62,8 @@ function calculateScores(pulls) {
         if (!pr.merged_at) return;
 
         const user = pr.user.login;
-        if (user.toLowerCase() === REPO_OWNER.toLowerCase()) return; // Exclude Admin
+        // Exclude Repo Owner from leaderboard visualization
+        if (user.toLowerCase() === REPO_OWNER.toLowerCase()) return;
 
         if (!statsMap[user]) statsMap[user] = 0;
 
@@ -69,8 +72,8 @@ function calculateScores(pulls) {
 
         pr.labels.forEach(label => {
             const name = label.name.toLowerCase();
-            if (name.includes('level 3')) { prPoints += POINTS.L3; hasLevel = true; }
-            else if (name.includes('level 2')) { prPoints += POINTS.L2; hasLevel = true; }
+            if (name.includes('level 3') || name.includes('level-3')) { prPoints += POINTS.L3; hasLevel = true; }
+            else if (name.includes('level 2') || name.includes('level-2')) { prPoints += POINTS.L2; hasLevel = true; }
             else if (name.includes('level 1')) { prPoints += POINTS.L1; hasLevel = true; }
         });
 
@@ -85,7 +88,7 @@ function getTopContributors(statsMap) {
     return Object.entries(statsMap)
         .map(([login, points]) => ({ login, xp: points * XP_MULTIPLIER }))
         .sort((a, b) => b.xp - a.xp)
-        .slice(0, 3);
+        .slice(0, 5); // Show Top 5 on Homepage
 }
 
 function getLeagueInfo(xp) {
@@ -95,49 +98,46 @@ function getLeagueInfo(xp) {
     return LEAGUES.ROOKIE;
 }
 
-function updateLeaderboardUI(top3) {
-    const rows = [
-        { selector: '.lb-row.gold', data: top3[0], rank: 1 },
-        { selector: '.lb-row.silver', data: top3[1], rank: 2 },
-        { selector: '.lb-row.bronze', data: top3[2], rank: 3 }
-    ];
+function renderLeaderboard(contributors) {
+    const container = document.getElementById('lb-rows');
+    if (!container) return;
+    
+    container.innerHTML = ''; // Clear loader
 
-    rows.forEach(row => {
-        const el = document.querySelector(row.selector);
-        if (el) {
-            // Clear existing placeholder content
-            el.innerHTML = ''; 
+    if (contributors.length === 0) {
+        container.innerHTML = `<div style="padding:20px; text-align:center;">No active agents found. Be the first!</div>`;
+        return;
+    }
 
-            if (row.data) {
-                const league = getLeagueInfo(row.data.xp);
-                
-                // Rank Badge
-                const rankSpan = document.createElement('div');
-                rankSpan.className = 'lb-rank';
-                rankSpan.innerHTML = `<span>#${row.rank}</span>`;
-                
-                // User Info
-                const userDiv = document.createElement('div');
-                userDiv.className = 'lb-user';
-                userDiv.innerHTML = `
-                    <span class="lb-name">@${row.data.login}</span>
-                    <span class="lb-perk" style="color:${league.color}; font-size: 0.75rem;">${league.perk}</span>
-                `;
-
-                // XP Info
-                const xpDiv = document.createElement('div');
-                xpDiv.className = 'lb-xp';
-                xpDiv.innerHTML = `${row.data.xp.toLocaleString()} <span class="xp-label">XP</span>`;
-
-                el.appendChild(rankSpan);
-                el.appendChild(userDiv);
-                el.appendChild(xpDiv);
-                
-                // Add league specific class for styling
-                el.style.borderLeftColor = league.color;
-            } else {
-                el.innerHTML = `<div class="lb-rank">#${row.rank}</div><div class="lb-user">---</div><div class="lb-xp">0 XP</div>`;
-            }
-        }
+    contributors.forEach((contributor, index) => {
+        const rank = index + 1;
+        const league = getLeagueInfo(contributor.xp);
+        
+        const row = document.createElement('div');
+        row.className = `lb-row rank-${rank}`;
+        
+        row.innerHTML = `
+            <div class="lb-rank">
+                <div class="lb-rank-badge">${rank}</div>
+            </div>
+            <div class="lb-user-info">
+                <span class="lb-username">@${contributor.login}</span>
+                <span class="lb-league-tag" style="color: ${league.color}">${league.name}</span>
+            </div>
+            <div class="lb-xp-val">
+                ${contributor.xp.toLocaleString()} XP
+            </div>
+        `;
+        
+        container.appendChild(row);
+        
+        // Add subtle entrance animation
+        row.style.opacity = 0;
+        row.style.transform = "translateY(10px)";
+        setTimeout(() => {
+            row.style.transition = "all 0.5s ease";
+            row.style.opacity = 1;
+            row.style.transform = "translateY(0)";
+        }, index * 100);
     });
 }
