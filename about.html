@@ -7,39 +7,19 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/about.css">
     <link rel="stylesheet" href="css/home-gsap.css">
+    <script>renderNavbar('../');</script>
     <link rel="stylesheet" href="css/back-to-top.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="hacker-theme">
 
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <img src="assets/logo.png" alt="Pixel Phantoms Logo">
-            <span>Pixel Phantoms</span>
-        </div>
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a class="active" href="about.html">About</a></li>
-             <li><a href="events.html">Events</a></li>
-             <li><a href="team.html">Team</a></li>
-            <li><a href="contact.html">Contact</a></li>
-            <li>
-                <div class="theme-toggle">
-                    <input type="checkbox" id="theme-switch" class="theme-switch">
-                    <label for="theme-switch" class="theme-label">
-                        <div class="toggle-thumb"></div>
-                        <span class="sun-icon">☀️</span>
-                        <span class="moon-icon">🌙</span>
-                    </label>
-                </div>
-            </li>
-        </ul>
-    </nav>
-</header>
+    <div id="navbar-placeholder"></div>
+    <script src="../js/navbar.js"></script>
+    <script>renderNavbar('../');</script>
 
-<section class="content">
+
+    <section class="content">
     <h2>About Pixel Phantoms</h2>
     <p>
         Pixel Phantoms is a student-driven tech club dedicated to empowering learners through
